@@ -3,6 +3,7 @@ package main
 import (
 	core_logger "MetricService/internal/core/logger"
 	core_server "MetricService/internal/core/transport/server"
+	feature_metrics "MetricService/internal/feature/metrics"
 	"context"
 	"os/signal"
 	"syscall"
@@ -24,10 +25,13 @@ func main() {
 		panic(err)
 	}
 
+	metCase := feature_metrics.NewMetricCase(log)
+
 	serv_conf := core_server.GetServerConfigMust()
 	server := core_server.NewServer(
 		serv_conf,
 		log,
+		metCase,
 	)
 
 	log.Info("Starting metricservice")

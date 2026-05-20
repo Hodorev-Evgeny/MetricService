@@ -2,6 +2,7 @@ package core_server
 
 import (
 	core_logger "MetricService/internal/core/logger"
+	feature_metrics "MetricService/internal/feature/metrics"
 	"context"
 	"fmt"
 	"net"
@@ -10,21 +11,25 @@ import (
 	metric "github.com/Hodorev-Evgeny/ShareSystemMonitoring/api/metric-service"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type Server struct {
 	metric.UnimplementedMetricsServer
-	config ServerConfig
-	log    *core_logger.Logger
+	config  ServerConfig
+	log     *core_logger.Logger
+	metcase *feature_metrics.MetricCase
 }
 
 func NewServer(
 	config ServerConfig,
 	logger *core_logger.Logger,
+	metcase *feature_metrics.MetricCase,
 ) *Server {
 	return &Server{
-		config: config,
-		log:    logger,
+		config:  config,
+		log:     logger,
+		metcase: metcase,
 	}
 }
 
@@ -39,6 +44,8 @@ func (s *Server) StartServer(ctx context.Context) error {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	metric.RegisterMetricsServer(grpcServer, s)
+
+	reflection.Register(grpcServer)
 
 	ch := make(chan error)
 	go func() {
