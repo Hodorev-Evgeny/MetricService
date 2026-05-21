@@ -1,0 +1,46 @@
+name: CheckStart
+on:
+  push:
+    branches:
+      - master
+jobs:
+  start:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Create .env
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: printf '%s\n' "$ENV_FILE" > .env
+      - name: Run project
+        run: make metric-deploy-check
+  deploy:
+    needs: [start]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Prepare SSH key
+        env:
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Add server
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+      - name: Deploy on server
+        run: |
+          ssh ${{secrets.KEY_SERVER}} "
+          cd ${{secrets.PROJECT_ROOT}} && \
+          git fetch origin master && \
+          git reset --hard origin/master && \
+          make metric-deploy-stop && \
+          make metric-deploy-start "
+      - name: Test work
+        env:
+          IP_SERVER_TEST: ${{secrets.IP_SERVER_TEST}}
+        run: make metric-deploy-check

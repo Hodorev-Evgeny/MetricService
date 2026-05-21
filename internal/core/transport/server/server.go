@@ -34,7 +34,7 @@ func NewServer(
 }
 
 func (s *Server) StartServer(ctx context.Context) error {
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", s.config.Addr))
+	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", s.config.Addr))
 	if err != nil {
 		s.log.Error("Failed to listen", zap.Error(err))
 		return err

@@ -1,0 +1,10 @@
+services:
+  metric-app:
+    build:
+      context: .
+      dockerfile: cmd/metricservice/Dockerfile
+    container_name: metric-service
+    env_file:
+      - .env
+    ports:
+      - "50051:50051"
