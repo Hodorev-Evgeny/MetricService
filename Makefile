@@ -17,9 +17,9 @@ metric-deploy-stop:
 metric-deploy-check:
 	@docker compose up -d --build metric-app
 	@for i in 1 2 3 4 5; do \
-		if grpcurl -plaintext -connect-timeout 2  localhost:50051 list; then \
-			exit 0; \
-		fi; \
+		if docker run --network host fullstorydev/grpcurl -plaintext -connect-timeout 2 localhost:50051 list; then \
+            exit 0; \
+        fi; \
 		echo "App is not ready"; \
 		sleep 2; \
   	done && \
