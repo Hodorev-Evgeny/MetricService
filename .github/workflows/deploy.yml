@@ -12,7 +12,9 @@ jobs:
       - name: Create .env
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
-        run: printf '%s\n' "$ENV_FILE" > .env
+        run: |
+          printf '%s\n' "$ENV_FILE" > .env
+          test -s .env
       - name: Run project
         run: make metric-deploy-check
   deploy:
@@ -28,19 +30,25 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Create .env
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          printf '%s\n' "$ENV_FILE" > .env
+          test -s .env
       - name: Add server
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
       - name: Deploy on server
         run: |
-          ssh ${{secrets.KEY_SERVER}} "
-          cd ${{secrets.PROJECT_ROOT}} && \
+          ssh ${{ secrets.KEY_SERVER }} "
+          cd ${{ secrets.PROJECT_ROOT }} && \
           git fetch origin master && \
           git reset --hard origin/master && \
           make metric-deploy-stop && \
           make metric-deploy-start "
       - name: Test work
         env:
-          IP_SERVER_TEST: ${{secrets.IP_SERVER_TEST}}
+          IP_SERVER_TEST: ${{ secrets.IP_SERVER_TEST }}
         run: make metric-deploy-check
